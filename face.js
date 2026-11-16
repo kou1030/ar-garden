@@ -10,7 +10,7 @@ if(!preview)scene.setAttribute('mindar-face','autoStart: false; faceOccluder: fa
 const target=R.el('a-entity',preview?{position:'0 .45 0'}:{'mindar-face-target':'anchorIndex: 168'},scene);
 // Nose-bridge anchor; move the shell slightly forward to reveal a mechanical interior.
 R.el('a-entity',{'robot-face':'',position:preview?'0 0 0':'0 -.08 .10'},target);
-R.el('a-camera',preview?{position:'0 1.1 3.7',rotation:'-19 0 0','look-controls':'enabled: false','wasd-controls':'enabled: false'}:{active:false,position:'0 0 0','look-controls':'enabled: false','wasd-controls':'enabled: false'},scene);R.lights(scene);
+R.el('a-camera',preview?{position:'0 .76 3.05',rotation:'-12 0 0','look-controls':'enabled: false','wasd-controls':'enabled: false'}:{active:false,position:'0 0 0','look-controls':'enabled: false','wasd-controls':'enabled: false'},scene);R.lights(scene);
 scene.addEventListener('targetFound',()=>{found=true;$('#status').textContent='口を開けると装甲が開きます';});
 scene.addEventListener('targetLost',()=>{found=false;$('#status').textContent='顔を正面に向けてください';});
 scene.addEventListener('arReady',()=>{clearTimeout(timer);if(failed){R.stop();return;}$('#status').textContent='内カメ準備完了 · 顔を映してください';});

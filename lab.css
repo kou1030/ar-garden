@@ -85,8 +85,14 @@ video { pointer-events: none; }
   border-radius: 10px;
 }
 .dock > button { flex: 1; }
-.dpad { display: grid; grid-template-columns: repeat(3, 48px); gap: 4px; user-select: none; }
-.dpad button { padding: 0; font-size: 22px; touch-action: none; }
+.dpad { display: grid; grid-template-columns: repeat(3, 48px); gap: 4px; }
+.dpad, .dpad button {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+.dpad button { padding: 0; font-size: 22px; }
 .dpad [data-dir=up] { grid-column: 2; }
 .dpad [data-dir=left] { grid-column: 1; grid-row: 2; }
 .dpad [data-dir=down] { grid-column: 2; grid-row: 2; }

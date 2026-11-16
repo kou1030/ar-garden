@@ -16,10 +16,14 @@ const base=preview?R.el('a-entity',{},scene):R.el('a-marker',{type:'pattern',url
 if(!preview){base.addEventListener('markerFound',()=>track(true));base.addEventListener('markerLost',()=>track(false));}
 R.el('a-entity',{'robot-player':''},base);
 
-if(preview)R.el('a-camera',{position:'0 2.5 4.8',rotation:'-24 0 0','look-controls':'enabled: false','wasd-controls':'enabled: false'},scene);else R.el('a-entity',{camera:''},scene);
+if(preview)R.el('a-camera',{position:'0 2 3.8',rotation:'-24 0 0','look-controls':'enabled: false','wasd-controls':'enabled: false'},scene);else R.el('a-entity',{camera:''},scene);
 R.lights(scene);$('#stage').appendChild(scene);$('#start-panel').hidden=true;$('#controls').hidden=false;track(preview);
 }catch(e){$('#error').textContent=e.message;$('#start').disabled=false;$('#preview').disabled=false;}}
-document.querySelectorAll('[data-dir]').forEach(b=>{b.addEventListener('pointerdown',e=>{if(!enabled())return;e.preventDefault();b.setPointerCapture(e.pointerId);input.set(e.pointerId,b.dataset.dir);b.classList.add('pressed');});const release=e=>{input.delete(e.pointerId);b.classList.remove('pressed');};b.addEventListener('pointerup',release);b.addEventListener('pointercancel',release);b.addEventListener('lostpointercapture',release);
+const dpad=document.querySelector('.dpad');
+for(const event of ['contextmenu','selectstart','dragstart']){
+ dpad.addEventListener(event,e=>e.preventDefault());
+}
+document.querySelectorAll('[data-dir]').forEach(b=>{b.addEventListener('pointerdown',e=>{if(!enabled()||e.button!==0)return;e.preventDefault();b.setPointerCapture(e.pointerId);input.set(e.pointerId,b.dataset.dir);b.classList.add('pressed');});const release=e=>{input.delete(e.pointerId);b.classList.remove('pressed');};b.addEventListener('pointerup',release);b.addEventListener('pointercancel',release);b.addEventListener('lostpointercapture',release);
 // Keyboard and screen-reader click users can step without holding a pointer.
 b.addEventListener('click',e=>{if(e.detail===0&&enabled()){input.set('step',b.dataset.dir);setTimeout(()=>input.delete('step'),180);}});});
 const keymap={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};
