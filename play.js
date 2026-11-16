@@ -1,34 +1,30 @@
 'use strict';
 (()=>{
-const R=RoboLab,$=s=>document.querySelector(s);let scene,anchor,robot,preview=false,tracked=false,started=false,open=false,jumpStart=-10,waveUntil=0,clock=0;
+const R=RoboLab,$=s=>document.querySelector(s);let scene,robot,preview=false,tracked=false,started=false,jumpStart=-10,clock=0;
 const input=new Map(),keys=new Set();
 function clearInput(){input.clear();keys.clear();document.querySelectorAll('.pressed').forEach(b=>b.classList.remove('pressed'));}
 function enabled(){return started&&(preview||tracked);}
-function track(found){tracked=found;if(!found)clearInput();$('#tracking-hint').hidden=found||preview;$('#status').textContent=preview?'操作プレビュー · カメラARではありません':found?'R-01 接続完了 · 操作できます':'召喚マーカーを探しています';document.querySelectorAll('.gamepad button').forEach(b=>b.disabled=!enabled());}
+function track(found){tracked=found;if(!found)clearInput();$('#status').textContent=preview?'カメラなしのプレビュー':found?'移動・ジャンプできます':'マーカーの黒い枠を全部映してください';document.querySelectorAll('.gamepad button').forEach(b=>b.disabled=!enabled());}
 AFRAME.registerComponent('robot-player',{init(){robot=R.buildRobot();this.el.setObject3D('robot',robot.root);},tick(ms,delta){if(!robot)return;clock=ms/1000;const dt=Math.min(delta/1000,.05);let x=0,z=0;const dirs=new Set([...input.values(),...keys]);if(enabled()){x=Number(dirs.has('right'))-Number(dirs.has('left'));z=Number(dirs.has('down'))-Number(dirs.has('up'));}const len=Math.hypot(x,z);if(len){x/=len;z/=len;this.el.object3D.position.x=R.clamp(this.el.object3D.position.x+x*dt*.65,-1,1);this.el.object3D.position.z=R.clamp(this.el.object3D.position.z+z*dt*.65,-.85,.85);robot.root.rotation.y=Math.atan2(x,z);}
  const phase=(clock-jumpStart)/.8;const jump=phase>0&&phase<1?Math.sin(phase*Math.PI)*.5:0;
- robot.update(clock,dt,{moving:!!len,jump,wave:clock<waveUntil,open:open?1:0});},remove(){this.el.removeObject3D('robot');}});
+ robot.update(clock,{moving:!!len,jump});},remove(){this.el.removeObject3D('robot');}});
 async function start(isPreview){if(started)return;$('#start').disabled=true;$('#preview').disabled=true;$('#error').textContent='';
 try{if(!isPreview){if(!isSecureContext||!navigator.mediaDevices)throw new Error('HTTPSのSafari / Chromeで開いてください。');await R.load('vendor/aframe-ar.js');}
 preview=isPreview;started=true;document.body.classList.toggle('preview',preview);scene=R.scene();
 if(!preview)scene.setAttribute('arjs','sourceType: webcam; detectionMode: mono; patternRatio: 0.5; debugUIEnabled: false; cameraParametersUrl: assets/camera_para.dat; sourceWidth: 640; sourceHeight: 480;');
 const base=preview?R.el('a-entity',{},scene):R.el('a-marker',{type:'pattern',url:'assets/garden.patt',size:1,emitevents:true,smooth:true,'smooth-count':5},scene);
 if(!preview){base.addEventListener('markerFound',()=>track(true));base.addEventListener('markerLost',()=>track(false));}
-anchor=R.el('a-entity',{'robot-player':''},base);
-R.el('a-cylinder',{radius:1.2,height:.025,color:'#426170',opacity:.45,position:'0 -.015 0','segments-radial':48},base);
-R.el('a-ring',{radiusInner:1.10,radiusOuter:1.12,rotation:'-90 0 0',color:'#9ff8e5',position:'0 .004 0',material:'shader: flat'},base);
+R.el('a-entity',{'robot-player':''},base);
+
 if(preview)R.el('a-camera',{position:'0 2.5 4.8',rotation:'-24 0 0','look-controls':'enabled: false','wasd-controls':'enabled: false'},scene);else R.el('a-entity',{camera:''},scene);
-R.lights(scene);$('#stage').appendChild(scene);$('#start-panel').hidden=true;$('#controls').hidden=false;$('#mode-label').textContent=preview?'3D PREVIEW / ARではありません':'R-01 / MARKER LINK';track(preview);
+R.lights(scene);$('#stage').appendChild(scene);$('#start-panel').hidden=true;$('#controls').hidden=false;track(preview);
 }catch(e){$('#error').textContent=e.message;$('#start').disabled=false;$('#preview').disabled=false;}}
 document.querySelectorAll('[data-dir]').forEach(b=>{b.addEventListener('pointerdown',e=>{if(!enabled())return;e.preventDefault();b.setPointerCapture(e.pointerId);input.set(e.pointerId,b.dataset.dir);b.classList.add('pressed');});const release=e=>{input.delete(e.pointerId);b.classList.remove('pressed');};b.addEventListener('pointerup',release);b.addEventListener('pointercancel',release);b.addEventListener('lostpointercapture',release);
 // Keyboard and screen-reader click users can step without holding a pointer.
 b.addEventListener('click',e=>{if(e.detail===0&&enabled()){input.set('step',b.dataset.dir);setTimeout(()=>input.delete('step'),180);}});});
 const keymap={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};
 addEventListener('keydown',e=>{if(keymap[e.key]&&enabled()){e.preventDefault();keys.add(keymap[e.key]);}});addEventListener('keyup',e=>keys.delete(keymap[e.key]));addEventListener('blur',clearInput);document.addEventListener('visibilitychange',clearInput);
-$('#jump').onclick=()=>{if(enabled()&&clock-jumpStart>=.8){jumpStart=clock;$('#hint').textContent='ジャンプ！';}};
-$('#wave').onclick=()=>{if(enabled()){waveUntil=clock+2.2;$('#hint').textContent='やあ、相棒！';}};
-$('#core').onclick=()=>{if(enabled()){open=!open;$('#core').setAttribute('aria-pressed',String(open));$('#hint').textContent=open?'コア開放。内側のギアが見えます。':'装甲を閉じました。';}};
-$('#reset').onclick=()=>{if(!robot)return;clearInput();anchor.object3D.position.set(0,0,0);robot.root.rotation.y=0;open=false;jumpStart=-10;waveUntil=0;$('#core').setAttribute('aria-pressed','false');$('#hint').textContent='位置とアクションをリセットしました。';};
-addEventListener('camera-error',()=>{$('#status').textContent='カメラを開始できません。サイトのカメラ許可を確認してください。';$('#tracking-hint').hidden=true;});
+$('#jump').onclick=()=>{if(enabled()&&clock-jumpStart>=.8)jumpStart=clock;};
+addEventListener('camera-error',()=>{$('#status').textContent='カメラを開始できません。サイトのカメラ許可を確認してください。';});
 $('#start').onclick=()=>start(false);$('#preview').onclick=()=>start(true);if(new URLSearchParams(location.search).get('preview')==='1')start(true);
 })();

@@ -1,1 +1,40 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>ロボットを召喚 | ポケット・ロボラボ</title><link rel="stylesheet" href="lab.css"><script defer src="vendor/aframe.min.js"></script><script defer src="robot.js"></script><script defer src="play.js"></script></head><body class="app"><header class="topbar"><a href="index.html" data-exit>← ロボラボ</a><h1>ロボットを召喚 · R-01</h1><div id="status" class="status" role="status">召喚キーを準備しよう</div></header><div id="stage"></div><section id="start-panel" class="start-panel"><span class="kicker">MARKER / BACK CAMERA</span><h2>相棒、起動。</h2><p>マーカーを映すとロボットが登場。<br>矢印で移動、ジャンプやコア開放で遊ぼう。</p><p class="tiny">マーカーを映し続けて操作します。以前の庭のマーカーがそのまま使えます。</p><a href="marker.html" target="_blank" rel="noopener">マーカーを開く ↗</a><button id="start" class="primary">背面カメラで召喚する</button><button id="preview">カメラなしで操作を練習</button><p id="error" role="alert"></p></section><div id="tracking-hint" hidden><div class="scan-frame"></div>黒い枠を全部映してください</div><section id="controls" class="dock" hidden><div class="dock-head"><span id="mode-label">R-01 / READY</span><button id="reset">位置をリセット</button></div><div class="gamepad"><div class="dpad" aria-label="移動"><button data-dir="up" aria-label="奥へ移動">↑</button><button data-dir="left" aria-label="左へ移動">←</button><button data-dir="down" aria-label="手前へ移動">↓</button><button data-dir="right" aria-label="右へ移動">→</button></div><div class="action-pad"><button id="jump" class="primary">ジャンプ</button><button id="wave">手をふる</button><button id="core" class="core" aria-pressed="false">✧ コア開放</button></div></div><p id="hint" class="hint">矢印を押している間、マーカーの上を移動します。</p><a class="home-return" href="face.html" data-exit>内カメでロボットに変身 →</a></section></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>ロボットを召喚</title>
+  <link rel="stylesheet" href="lab.css?v=3">
+
+  <script defer src="vendor/aframe.min.js"></script>
+  <script defer src="robot.js?v=3"></script>
+  <script defer src="play.js?v=3"></script>
+</head>
+
+<body class="app">
+  <header class="topbar">
+    <a href="index.html" data-exit aria-label="ホームへ戻る">← 戻る</a>
+    <h1>ロボットを召喚</h1>
+    <p id="status" role="status"></p>
+  </header>
+  <div id="stage"></div>
+  <section id="start-panel" class="start-panel">
+
+    <p>マーカーの黒い枠を全部映してください。</p>
+    <button id="start" class="primary">背面カメラを起動</button>
+    <a class="text-link" href="marker.html" target="_blank" rel="noopener">マーカーを表示</a>
+    <button id="preview">カメラなしで試す</button>
+    <p id="error" role="alert"></p>
+  </section>
+
+  <section id="controls" class="dock gamepad" aria-label="ロボットの操作" hidden>
+    <div class="dpad">
+      <button data-dir="up" aria-label="奥へ移動">↑</button>
+      <button data-dir="left" aria-label="左へ移動">←</button>
+      <button data-dir="down" aria-label="手前へ移動">↓</button>
+      <button data-dir="right" aria-label="右へ移動">→</button>
+    </div>
+    <button id="jump" class="primary">ジャンプ</button>
+  </section>
+</body>
+</html>
