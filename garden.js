@@ -2,7 +2,7 @@
 // All geometry is original and generated locally. No external models or textures.
 const $ = s => document.querySelector(s);
 let scene, garden, marker, preview = false, found = false, lights = 0, paused = false, time = 'day';
-const palette = {day:['#d7f0d2',1.5,'#fff3c9',2.1,'#57beaf','DAYLIGHT / 木漏れ日の庭'],dusk:['#b69bce',1.1,'#ffae78',2,'#ad91dc','TWILIGHT / 琥珀の風'],night:['#708ebd',.65,'#a5d7ff',1,'#417bab','MOONLIGHT / 星の眠る泉']};
+const palette = {day:['#d7f0d2',.8,'#fff3c9',1.1,'#57beaf','DAYLIGHT / 木漏れ日の庭'],dusk:['#b69bce',.65,'#ffae78',1.3,'#ad91dc','TWILIGHT / 琥珀の風'],night:['#708ebd',.4,'#a5d7ff',.7,'#417bab','MOONLIGHT / 星の眠る泉']};
 function entity(tag,attrs,parent){const e=document.createElement(tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);parent.appendChild(e);return e;}
 function mesh(shape,pos,scale,color,parent=garden,extra={}){return entity('a-entity',{geometry:`primitive: ${shape}`,position:pos,scale,material:`color: ${color}; roughness: .85; flatShading: true`,...extra},parent);}
 function buildGarden(){
@@ -27,15 +27,20 @@ function buildGarden(){
  entity('a-entity',{id:'sun',light:'type: directional; color: #fff3c9; intensity: 2.1',position:'-1 3 2'},scene);
 }
 function setTime(value){time=value;const p=palette[value];$('#ambient').setAttribute('light',{color:p[0],intensity:p[1]});$('#sun').setAttribute('light',{color:p[2],intensity:p[3]});$('#pond').setAttribute('material','color',p[4]);$('#season').textContent=p[5];document.querySelectorAll('[data-time]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.time===value)));document.querySelectorAll('.spark').forEach(e=>e.setAttribute('scale',value==='night'?'.025 .025 .025':'.016 .016 .016'));}
-function tracking(ok){found=ok;$('#wish').disabled=!ok&&!preview;$('#reticle').hidden=ok||preview;$('#status').textContent=preview?'3Dプレビュー · 実写ARではありません':ok?'庭の扉がひらきました · マーカー認識中':'マーカーを探しています';}
+function tracking(ok){found=ok;$('#wish').disabled=lights===5||(!ok&&!preview);$('#reticle').hidden=ok||preview;$('#status').textContent=preview?'3Dプレビュー · 実写ARではありません':ok?'庭の扉がひらきました · マーカー認識中':'マーカーを探しています';}
 function fail(message){$('#status').textContent=message;$('#hint').textContent='カメラ許可を確認し、終了してから再度お試しください。';$('#reticle').hidden=true;}
-function start(isPreview){
- if(!window.AFRAME||!window.THREEx){$('#status').textContent='ライブラリを読み込めません。再読み込みしてください。';return;}
+async function start(isPreview){
+ if(!window.AFRAME){$('#status').textContent='ライブラリを読み込めません。再読み込みしてください。';return;}
  if(!isPreview&&(!window.isSecureContext||!navigator.mediaDevices)){ $('#status').textContent='HTTPSで開き、カメラ対応ブラウザをご利用ください。';return;}
+ if(!isPreview&&!AFRAME.systems.arjs){
+  $('#start').disabled=true;$('#preview').disabled=true;$('#status').textContent='ARエンジンを準備しています…';
+  try{await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='vendor/aframe-ar.js';s.onload=resolve;s.onerror=reject;document.head.appendChild(s);});}
+  catch(e){$('#status').textContent='ARエンジンを読み込めません。再読み込みしてください。';$('#start').disabled=false;$('#preview').disabled=false;return;}
+ }
  preview=isPreview;$('#welcome').hidden=true;$('#controls').hidden=false;document.body.classList.add('active');document.body.classList.toggle('preview',preview);
- scene=document.createElement('a-scene');scene.setAttribute('embedded','');scene.setAttribute('vr-mode-ui','enabled: false');scene.setAttribute('device-orientation-permission-ui','enabled: false');scene.setAttribute('renderer','alpha: true; antialias: true; colorManagement: true; precision: mediump');
+ scene=document.createElement('a-scene');scene.setAttribute('embedded','');scene.setAttribute('xr-mode-ui','enabled: false');scene.setAttribute('device-orientation-permission-ui','enabled: false');scene.setAttribute('renderer','alpha: true; antialias: true; colorManagement: true');
  if(!preview)scene.setAttribute('arjs','sourceType: webcam; debugUIEnabled: false; detectionMode: mono; patternRatio: 0.5; cameraParametersUrl: assets/camera_para.dat; sourceWidth: 640; sourceHeight: 480;');
- if(preview){garden=entity('a-entity',{rotation:'0 -25 0'},scene);entity('a-camera',{position:'0 2.5 3.6',rotation:'-32 0 0','look-controls':'enabled: false','wasd-controls':'enabled: false'},scene);}else{marker=entity('a-marker',{type:'pattern',url:'assets/garden.patt',size:1,emitevents:true,smooth:true,'smooth-count':5},scene);garden=entity('a-entity',{},marker);entity('a-entity',{camera:'',position:'0 0 0'},scene);marker.addEventListener('markerFound',()=>tracking(true));marker.addEventListener('markerLost',()=>tracking(false));}
+ if(preview){garden=entity('a-entity',{rotation:'0 -25 0'},scene);entity('a-camera',{position:'0 2.5 3.6',rotation:'-40 0 0','look-controls':'enabled: false','wasd-controls':'enabled: false'},scene);}else{marker=entity('a-marker',{type:'pattern',url:'assets/garden.patt',size:1,emitevents:true,smooth:true,'smooth-count':5},scene);garden=entity('a-entity',{},marker);entity('a-entity',{camera:'',position:'0 0 0'},scene);marker.addEventListener('markerFound',()=>tracking(true));marker.addEventListener('markerLost',()=>tracking(false));}
  buildGarden();$('#scene-host').appendChild(scene);$('#view-label').textContent=preview?'3D PREVIEW · ARではありません':'MARKER AR';tracking(preview);setTime(time);
  if(matchMedia('(prefers-reduced-motion: reduce)').matches){paused=true;$('#motion').textContent='▶';$('#motion').setAttribute('aria-pressed','true');scene.addEventListener('loaded',()=>garden.pause(),{once:true});}
 }
@@ -48,3 +53,4 @@ $('#reset').onclick=()=>{lights=0;$('#count').textContent='0 / 5';$('#blooms').s
 $('#motion').onclick=()=>{paused=!paused;paused?garden.pause():garden.play();$('#motion').textContent=paused?'▶':'Ⅱ';$('#motion').setAttribute('aria-pressed',String(paused));$('#motion').setAttribute('aria-label',paused?'アニメーションを再開':'アニメーションを一時停止');};
 $('#help').onclick=()=>$('#guide').showModal();$('#close-guide').onclick=()=>$('#guide').close();
 $('#exit').onclick=()=>{document.querySelectorAll('video').forEach(v=>v.srcObject?.getTracks().forEach(t=>t.stop()));location.reload();};
+
